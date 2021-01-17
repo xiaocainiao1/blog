@@ -5,9 +5,9 @@
 本次实战中，IDEA作为开发电脑，要远程连接到另一台Linux电脑上部署的Docker服务192.168.2.95，我们登陆到机器上，进行docker远程访问配置：
 
 ```
-# vi /lib/systemd/system/docker.service 
+# vi usr/lib/systemd/system/docker.service 
 修改：
-ExecStart=/usr/bin/dockerd -H tcp://tcp://0.0.0.0:2375 -H unix://var/run/docker.sock --containerd=/run/containerd/containerd.sock
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix://var/run/docker.sock --containerd=/run/containerd/containerd.sock
 ```
 
 重启docker 服务：
@@ -16,7 +16,7 @@ ExecStart=/usr/bin/dockerd -H tcp://tcp://0.0.0.0:2375 -H unix://var/run/docker.
 [root@dev_vonedao_95 ~]# systemctl daemon-reload
 [root@dev_vonedao_95 ~]# systemctl restart docker
 [root@dev_vonedao_95 ~]# ps -ef |grep docker
-root     12319     1  1 18:27 ?        00:00:00 /usr/bin/dockerd -H tcp://tcp://0.0.0.0:2375 -H unix://var/run/docker.sock --containerd=/run/containerd/containerd.sock
+root     12319     1  1 18:27 ?        00:00:00 /usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix://var/run/docker.sock --containerd=/run/containerd/containerd.sock
 root     12461 12217  0 18:27 pts/0    00:00:00 grep --color=auto docker
 ```
 
