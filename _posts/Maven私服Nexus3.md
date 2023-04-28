@@ -515,6 +515,92 @@ When you delete a repository from the Nexus UI, nexus will remove the repository
 
 ![img](https://img-blog.csdnimg.cn/20190909152133765.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NzZG5tdXlp,size_16,color_FFFFFF,t_70)
 
+
+
+#### 九、将本地库批量导入到Nexus3.x上（Maven私服）
+
+##### 1，问题描述
+
+（1）由于公司内网的 **Nexus** 私服仓库不能联网，不过本地仓库已经有很多的 **maven** 的 **jar** 包了，便想将其从本地仓库导入到 **Nexus** 私服中。
+
+（2）**Nexus2.x** 批量导入本地库是十分容易的，只需将库文件夹复制到对应 **nexus** 库下面，去网页刷新一下索引就OK了。在 **Nexus3.x** 中，我们没法这么操作了，但是我们可以使用 **shell** 脚本，批量导入 **Nexus3.x**。
+
+##### 2，操作步骤
+
+（1）首先访问 **Nexus** 页面，登录后点击“**Create repository**”按钮新建一个仓库。
+
+[![原文:将本地库批量导入到Nexus3.x上（Maven私服）](https://www.hangge.com/blog_uploads/202005/2020050815390656086.jpg)](https://www.hangge.com/blog/cache/detail_2910.html#)
+
+
+
+（2）选择 **maven2(hosted)**
+
+[![原文:将本地库批量导入到Nexus3.x上（Maven私服）](https://www.hangge.com/blog_uploads/202005/2020050815461035865.jpg)](https://www.hangge.com/blog/cache/detail_2910.html#)
+
+
+
+（3）按照自身需求填写如下选项（仓库名随意）：
+
+[![原文:将本地库批量导入到Nexus3.x上（Maven私服）](https://www.hangge.com/blog_uploads/202005/2020050816011744772.jpg)](https://www.hangge.com/blog/cache/detail_2910.html#)
+
+
+
+（4）在服务器 **/home** 目录下，新建一个文件夹 **repo**，批量放入我们需要的本地库文件夹：
+
+[![原文:将本地库批量导入到Nexus3.x上（Maven私服）](https://www.hangge.com/blog_uploads/202005/2020050816145426949.png)](https://www.hangge.com/blog/cache/detail_2910.html#)
+
+
+
+（5）在 **repo** 文件夹下执行如下命令创建一个 **shell** 脚本：
+
+```
+vi mavenimport.sh
+```
+
+
+（6）脚本内容如下：
+
+```
+#!/bin/bash
+# copy and run this script to the root of the repository directory containing files
+# this script attempts to exclude uploading itself explicitly so the script name is important
+# Get command line params
+while getopts ":r:u:p:" opt; do
+    case $opt in
+        r) REPO_URL="$OPTARG"
+        ;;
+        u) USERNAME="$OPTARG"
+        ;;
+        p) PASSWORD="$OPTARG"
+        ;;
+    esac
+done
+  
+find . -type f -not -path './mavenimport\.sh*' -not -path '*/\.*' -not -path '*/\^archetype\-catalog\.xml*' -not -path '*/\^maven\-metadata\-local*\.xml' -not -path '*/\^maven\-metadata\-deployment*\.xml' | sed "s|^\./||" | xargs -I '{}' curl -u "$USERNAME:$PASSWORD" -X PUT -v -T {} ${REPO_URL}/{} ;
+
+```
+
+
+（7）保存退出后执行如下命令赋予其执行权限：
+
+```
+chmod` `+x mavenimport.sh
+```
+
+
+（8）执行如下命令即可将该目录下的 **jar** 包都导入到指定仓库中：
+
+**注意：**命令中 **Nexus** 用户名、用户密码、仓库地址根据实际情况进行修改。
+
+```
+./mavenimport.sh -u admin -p 123 -r http:``//192.168.60.133:8081/repository/my_repo/
+```
+
+
+（9）访问 **Nexus** 控制台页面，可以发现确实都上传成功了：
+
+[![原文:将本地库批量导入到Nexus3.x上（Maven私服）](https://www.hangge.com/blog_uploads/202005/2020050816335416351.png)](https://www.hangge.com/blog/cache/detail_2910.html#)
+
 \--------------------------
 
 **打完收工**
